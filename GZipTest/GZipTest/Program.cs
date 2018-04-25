@@ -1,9 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading;
-using System.IO.Compression;
 using System.IO;
 using GZipTest.Tools;
 using GZipTest.Enums;
@@ -18,27 +13,29 @@ namespace GZipTest
             try {
                 Validator val = new Validator();
                 CompressOperations compressOperation;
-                if (!val.ValidateArgs(args, out compressOperation))
+                string inputFilePath;
+                if (!val.ValidateArgs(args, out inputFilePath, out compressOperation))
                 {
                     Console.WriteLine("Validator has finished validation unsuccessfully. Please review output above for more details");
                     return 1;
                 }
 
                 PathCorrector corrector = new PathCorrector();
-                FileInfo outputFileInfo = corrector.CorrectOutput(args[2]);
+                string outputFilePath = corrector.CorrectOutput(args[2]);
 
                 ICompressor compressor = new Compressor();
-                if (compressOperation == CompressOperations.Compress)
+                FileInfo fileInfo = new FileInfo(inputFilePath);
+                switch (compressOperation)
                 {
-                    return compressor.Compress();
-                }
-                if (compressOperation == CompressOperations.Decompress)
-                {
-                    return compressor.Decompress();
-                }
+                    case CompressOperations.Compress:
+                        return compressor.Compress(fileInfo, outputFilePath);
 
-                //Program will get here only if we add another CompressOperations
-                return 1;
+                    case CompressOperations.Decompress:
+                        return compressor.Decompress(fileInfo, outputFilePath);
+
+                    default:
+                        return 1;
+                }
             }
             catch (Exception e)
             {

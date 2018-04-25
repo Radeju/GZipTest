@@ -1,13 +1,10 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
+﻿using System.IO;
 
 namespace GZipTest.Interfaces
 {
     public interface ICompressor
     {
-        int Compress();
-        int Decompress();
+        int Compress(FileInfo fileToCompress, string archiveName);
+        int Decompress(FileInfo fileToDecompress, string decompressedFileName);
     }
 }

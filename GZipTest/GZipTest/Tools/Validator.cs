@@ -1,9 +1,6 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.IO;
 using GZipTest.Enums;
-using System.Linq;
-using System.Text;
 
 namespace GZipTest.Tools
 {
@@ -15,9 +12,10 @@ namespace GZipTest.Tools
         /// Validates whether all arguments from the console are correct, i.e. there are exactly 3 arguments,
         /// the original_file_name exists and archive_file_name is not taken
         /// </summary>
-        internal bool ValidateArgs(string[] args, out CompressOperations compress)
+        internal bool ValidateArgs(string[] args, out string inputFilePath, out CompressOperations compress)
         {
             compress = CompressOperations.Decompress;
+            inputFilePath = null;
 
             if (!ValidateLength(args))
             {
@@ -29,7 +27,7 @@ namespace GZipTest.Tools
                 return false;
             }
 
-            if (!ValidateInputPath(args))
+            if (!ValidateInputPath(args, out inputFilePath))
             {
                 return false;
             }
@@ -50,7 +48,6 @@ namespace GZipTest.Tools
             
             Console.WriteLine(
                 $"You need exactly 3 arguments in format \"GZipTest.exe [compress/decompress] [original_file_name] [archive_file_name]\"");
-            Console.WriteLine("Please remember to put the file you compress/decompress into the same folder as your program.");
             Console.WriteLine("Please revise your arguments and try again.");
             return false;
         }
@@ -72,16 +69,19 @@ namespace GZipTest.Tools
             return true;
         }
 
-        private bool ValidateInputPath(string[] args)
+        private bool ValidateInputPath(string[] args, out string inputFilePath)
         {
-            string path = Environment.CurrentDirectory;
-            FileInfo inFileInfo = new FileInfo(path + args[1]);
-            if (inFileInfo == null)
+            
+            string dirPath = Environment.CurrentDirectory;
+            string filePath = dirPath + "\\" + args[2];
+            if (File.Exists(filePath))
             {
                 Console.WriteLine(@"Unfortunately the file that you selected does not exist. Please try once more. You only need to write
                     the name of the file within the directory of the program");
+                inputFilePath = null;
                 return false;
             }
+            inputFilePath = filePath;
             return true;
         }
 

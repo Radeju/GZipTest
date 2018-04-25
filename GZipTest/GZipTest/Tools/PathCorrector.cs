@@ -1,21 +1,21 @@
 ﻿using System;
 using System.IO;
-using System.Text;
 
 namespace GZipTest.Tools
 {
     internal class PathCorrector
     {
-        internal FileInfo CorrectOutput(string fileName)
+        internal string CorrectOutput(string fileName)
         {
-            string path = Environment.CurrentDirectory;
-            FileInfo outFileInfo = new FileInfo(path + fileName);
+            string dirPath = Environment.CurrentDirectory;
+            string filePath = dirPath + "\\" + fileName;
+            string resultFilePath = filePath;
             int i = 1;
-            while (outFileInfo != null)
+            while (File.Exists(resultFilePath))
             {
-                outFileInfo = new FileInfo(path + fileName + "_" + i); //should be no need for Stringbuilder
+                resultFilePath = filePath + "_" + i; //should be no need for Stringbuilder
             }
-            return outFileInfo;
+            return resultFilePath;
         }
     }
 }
