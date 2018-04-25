@@ -1,5 +1,6 @@
 ﻿using System.IO;
 using GZipTest.Interfaces;
+using System.IO.Compression;
 
 namespace GZipTest.Tools
 {
@@ -14,7 +15,15 @@ namespace GZipTest.Tools
                 {
                     using (FileStream outFileStream = File.Create(archiveName + ".gz"))
                     {
-                        
+                        using (GZipStream compress = new GZipStream(outFileStream, CompressionMode.Compress))
+                        {
+                            byte[] buffer = new byte[4096];
+                            int numRead;
+                            while ((numRead = originalFileStream.Read(buffer, 0, buffer.Length)) != 0)
+                            {
+                                compress.Write(buffer, 0, numRead);
+                            }
+                        }
                     }
                 }
             }
