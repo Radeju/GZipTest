@@ -4,6 +4,7 @@ using System.Threading;
 using GZipTest.Tools;
 using GZipTest.Enums;
 using GZipTest.Interfaces;
+using ThreadPool = System.Threading.ThreadPool;
 
 namespace GZipTest
 {
@@ -11,7 +12,11 @@ namespace GZipTest
     {   
         public static int Main(string[] args)
         {
-            try {
+            try
+            {
+                //args = new[] {"compress", "standard.xml", "standard-comp"};
+                args = new[] { "decompress", "standard-comp.gz", "standard-restored" };
+
                 Validator val = new Validator();
                 CompressOperations compressOperation;
                 string inputFilePath;
@@ -29,20 +34,14 @@ namespace GZipTest
                 switch (compressOperation)
                 {
                     case CompressOperations.Compress:
-                        /*
-                        int myVal;
-                        Thread thread = new Thread( () =>
-                        {
-                            myVal = compressor.Compress(fileInfo, outputFilePath);
-                            Console.WriteLine("Finished");
-                        });
-                        thread.Start();
-                        return 1;
-                        */
-                        return compressor.Compress(fileInfo, outputFilePath);
+                        Tools.ThreadPoolApproach.CompressMultithread(fileInfo, outputFilePath);
+                        return 0;
+                        //return compressor.Compress(fileInfo, outputFilePath);
 
                     case CompressOperations.Decompress:
-                        return compressor.Decompress(fileInfo, outputFilePath);
+                        compressor.GUnzipConcatenatedFile(inputFilePath, outputFilePath);
+                        return 0;
+                        //return compressor.Decompress(fileInfo, outputFilePath);
 
                     default:
                         return 1;

@@ -43,11 +43,12 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Enums\CompressOperations.cs" />
+    <Compile Include="Globals\Const.cs" />
     <Compile Include="Interfaces\ICompressor.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Tools\Compressor.cs" />
-    <Compile Include="Tools\FileSplitter.cs" />
+    <Compile Include="Tools\FileManipulator.cs" />
     <Compile Include="Tools\PathCorrector.cs" />
     <Compile Include="Tools\StreamConcatenator.cs" />
     <Compile Include="Tools\Validator.cs" />

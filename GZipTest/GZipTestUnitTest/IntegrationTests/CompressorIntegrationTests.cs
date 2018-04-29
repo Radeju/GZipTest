@@ -9,6 +9,7 @@ namespace GZipTestUnitTest.IntegrationTests
     class CompressorIntegrationTests
     {
         private readonly string xmlFile = "XMLTestFile.xml";
+        private readonly string bigXmlFile = "standard.xml";
         private readonly string compressedFileName = "XMLCompressed";
         private readonly string decompressedFilename = "XMLDecompressed";
 
@@ -27,7 +28,24 @@ namespace GZipTestUnitTest.IntegrationTests
             compressor.Compress(fiToCompress, compressedFileName);
             compressor.Decompress(fiToDecompress, decompressedFilename);
             
-            //Assert that compressed-decompressed is the same as original
+            //TODO: Assert that compressed-decompressed is the same as original
+            throw new AssertFailedException("No Assertion implemented yet");
+        }
+
+        [TestMethod]
+        public void CompressMultiThreadAndDecompress()
+        {
+            //Arrange
+            ICompressor compressor = new Compressor();
+            FileInfo fiToCompress = new FileInfo(bigXmlFile);
+            FileInfo fiToDecompress = new FileInfo(compressedFileName);
+
+            //Act
+            compressor.CompressMultiThread(fiToCompress, compressedFileName);
+            compressor.Decompress(fiToDecompress, decompressedFilename);
+
+            //TODO: Assert that compressed-decompressed is the same as original
+            throw new AssertFailedException("No Assertion implemented yet");
         }
     }
 }

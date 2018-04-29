@@ -14,6 +14,7 @@ namespace GZipTest.Tools
             while (File.Exists(resultFilePath))
             {
                 resultFilePath = filePath + "_" + i; //should be no need for Stringbuilder
+                i += 1;
             }
             return resultFilePath;
         }
