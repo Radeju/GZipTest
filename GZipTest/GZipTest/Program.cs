@@ -1,14 +1,15 @@
 ﻿using System;
 using System.IO;
+using System.Threading;
 using GZipTest.Tools;
 using GZipTest.Enums;
 using GZipTest.Interfaces;
 
 namespace GZipTest
 {
-    class Program
+    public class Program
     {   
-        static int Main(string[] args)
+        public static int Main(string[] args)
         {
             try {
                 Validator val = new Validator();
@@ -28,6 +29,16 @@ namespace GZipTest
                 switch (compressOperation)
                 {
                     case CompressOperations.Compress:
+                        /*
+                        int myVal;
+                        Thread thread = new Thread( () =>
+                        {
+                            myVal = compressor.Compress(fileInfo, outputFilePath);
+                            Console.WriteLine("Finished");
+                        });
+                        thread.Start();
+                        return 1;
+                        */
                         return compressor.Compress(fileInfo, outputFilePath);
 
                     case CompressOperations.Decompress:

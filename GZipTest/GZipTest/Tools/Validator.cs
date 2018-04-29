@@ -73,10 +73,10 @@ namespace GZipTest.Tools
         {
             
             string dirPath = Environment.CurrentDirectory;
-            string filePath = dirPath + "\\" + args[2];
-            if (File.Exists(filePath))
+            string filePath = dirPath + "\\" + args[1];
+            if (!File.Exists(filePath))
             {
-                Console.WriteLine(@"Unfortunately the file that you selected does not exist. Please try once more. You only need to write
+                Console.WriteLine($@"Unfortunately the file that you selected {filePath} does not exist. Please try once more. You only need to write
                     the name of the file within the directory of the program");
                 inputFilePath = null;
                 return false;
