@@ -1,20 +1,27 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using GZipTest.Globals;
 using GZipTest.Tools;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
-
+using GZipTestUnitTest.Common;
+using NUnit.Framework;
 
 namespace GZipTestUnitTest.UnitTests
 {
-    [TestClass]
+    [TestFixture]
     public class FileSplitterUnitTests
     {
         private readonly string folderName = null;
         private readonly string bigXml = "standard.xml";
         private readonly string decompressedFile = "standard_restored.xml";
 
-        [TestMethod]
+        [OneTimeSetUp]
+        public void CompressorUnitTestsInit()
+        {
+            CommonTests.SetDirectory();
+        }
+
+        [Test]
         public void SplitTest()
         {
             //Arrange
@@ -24,7 +31,7 @@ namespace GZipTestUnitTest.UnitTests
             List<FileInfo> list = SplitFiles(manipulator);
         }
 
-        [TestMethod]
+        [Test]
         public void MergeTest()
         {
             //Arrange

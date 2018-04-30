@@ -1,12 +1,14 @@
-﻿using System.Diagnostics;
+﻿using System;
+using System.Diagnostics;
 using System.IO;
 using GZipTest.Interfaces;
 using GZipTest.Tools;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
+using NUnit.Framework;
+using GZipTestUnitTest.Common;
 
 namespace GZipTestUnitTest.UnitTests
 {
-    [TestClass]
+    [TestFixture]
     public class CompressorUnitTests
     {
         private readonly string xmlFile = "XMLTestFile.xml";
@@ -14,7 +16,13 @@ namespace GZipTestUnitTest.UnitTests
         private readonly string compressedFileName = "XMLCompressed";
         private readonly string decompressedFilename = "XMLDecompressed";
 
-        [TestMethod]
+        [OneTimeSetUp]
+        public void CompressorUnitTestsInit()
+        {
+            CommonTests.SetDirectory();
+        }
+
+        [Test]
         public void CompressTest()
         {
             //Arrange
@@ -29,7 +37,7 @@ namespace GZipTestUnitTest.UnitTests
             Assert.AreEqual(result, 0);
         }
 
-        [TestMethod]
+        [Test]
         public void CompressMultiThreadedTest()
         {
             //Arrange
@@ -40,7 +48,7 @@ namespace GZipTestUnitTest.UnitTests
             compressor.CompressMultiThread(fileInfo, compressedFileName);
         }
 
-        [TestMethod]
+        [Test]
         public void DecompressTest()
         {
             //Arrange
@@ -54,15 +62,17 @@ namespace GZipTestUnitTest.UnitTests
             Assert.Equals(result, 0);
         }
 
-        [TestMethod]
-        public void ThreadPoolTest()
+        [Test]
+        public void CompressorThreadPoolTest()
         {
             //Arrange
             ICompressor decompressor = new Compressor();
+            var path = Directory.GetCurrentDirectory();
             FileInfo fileInfo = new FileInfo(bigXmlFile);
+            CompressorThreadPool ctp = new CompressorThreadPool();
 
             //Act
-            CompressorThreadPool.CompressMultithread(fileInfo, compressedFileName);
+            ctp.CompressMultithread(fileInfo, compressedFileName);
         }
     }
 }

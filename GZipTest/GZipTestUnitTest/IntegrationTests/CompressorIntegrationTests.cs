@@ -1,11 +1,12 @@
 ﻿using System.IO;
 using GZipTest.Interfaces;
 using GZipTest.Tools;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
+using GZipTestUnitTest.Common;
+using NUnit.Framework;
 
 namespace GZipTestUnitTest.IntegrationTests
 {
-    [TestClass]
+    [TestFixture]
     class CompressorIntegrationTests
     {
         private readonly string xmlFile = "XMLTestFile.xml";
@@ -13,10 +14,16 @@ namespace GZipTestUnitTest.IntegrationTests
         private readonly string compressedFileName = "XMLCompressed";
         private readonly string decompressedFilename = "XMLDecompressed";
 
+        [OneTimeSetUp]
+        public void CompressorUnitTestsInit()
+        {
+            CommonTests.SetDirectory();
+        }
+
         /// <summary>
         /// Assert that input file is the same as compressed and decompressed file
         /// </summary>
-        [TestMethod]
+        [Test]
         public void CompressAndDecompress()
         {
             //Arrange
@@ -29,10 +36,10 @@ namespace GZipTestUnitTest.IntegrationTests
             compressor.Decompress(fiToDecompress, decompressedFilename);
             
             //TODO: Assert that compressed-decompressed is the same as original
-            throw new AssertFailedException("No Assertion implemented yet");
+            throw new AssertionException("No Assertion implemented yet");
         }
 
-        [TestMethod]
+        [Test]
         public void CompressMultiThreadAndDecompress()
         {
             //Arrange
@@ -45,7 +52,7 @@ namespace GZipTestUnitTest.IntegrationTests
             compressor.Decompress(fiToDecompress, decompressedFilename);
 
             //TODO: Assert that compressed-decompressed is the same as original
-            throw new AssertFailedException("No Assertion implemented yet");
+            throw new AssertionException("No Assertion implemented yet");
         }
     }
 }

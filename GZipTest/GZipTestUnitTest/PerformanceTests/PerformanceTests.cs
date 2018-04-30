@@ -1,33 +1,40 @@
 ﻿using System;
 using System.Diagnostics;
 using GZipTest.Tools;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
+using GZipTestUnitTest.Common;
 using GZipTestUnitTest.UnitTests;
+using NUnit.Framework;
 
 namespace GZipTestUnitTest.PerformanceTests
 {
-    [TestClass]
+    [TestFixture]
     public class PerformanceTests
     {
-        [TestMethod]
+        [OneTimeSetUp]
+        public void CompressorUnitTestsInit()
+        {
+            CommonTests.SetDirectory();
+        }
+
+        [Test]
         public void MeasureCompressorTests()
         {
             CompressorUnitTests compressor = new CompressorUnitTests();
             TimeSpan time = MeasureTime(compressor.CompressTest);
         }
 
-        [TestMethod]
+        [Test]
         public void MeasureCompressorMultiThreadTests()
         {
             CompressorUnitTests compressor = new CompressorUnitTests();
             TimeSpan time = MeasureTime(compressor.CompressMultiThreadedTest);
         }
 
-        [TestMethod]
+        [Test]
         public void MeasureCompressorThreadPoolTests()
         {
             CompressorUnitTests compressor = new CompressorUnitTests();
-            TimeSpan time = MeasureTime(compressor.ThreadPoolTest);
+            TimeSpan time = MeasureTime(compressor.CompressorThreadPoolTest);
         }
 
         private TimeSpan MeasureTime(Action a)
