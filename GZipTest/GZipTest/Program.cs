@@ -28,7 +28,7 @@ namespace GZipTest
                 PathCorrector corrector = new PathCorrector();
                 string outputFilePath = corrector.CorrectOutput(args[2]);
 
-                ICompressorMultithread compressor = new CompressorMultithread();
+                ICompressorMultithread compressor = new CompressorMultiThread();
                 FileInfo fileInfo = new FileInfo(inputFilePath);
                 switch (compressOperation)
                 {

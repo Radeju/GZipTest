@@ -42,11 +42,11 @@ namespace GZipTestUnitTest.UnitTests
         public void CompressMultiThreadedTest()
         {
             //Arrange
-            ICompressorMultithread compressor = new CompressorMultithread();
+            ICompressorMultithread compressor = new CompressorMultiThread();
             FileInfo fileInfo = new FileInfo(bigXmlFile);
 
             //Act
-            compressor.CompressMultiThread(fileInfo, compressedFileName);
+            compressor.CompressOnMultipleThreads(fileInfo, compressedFileName);
         }
 
         [Test]

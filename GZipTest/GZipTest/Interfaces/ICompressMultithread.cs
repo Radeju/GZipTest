@@ -8,7 +8,7 @@ namespace GZipTest.Interfaces
 {
     public interface ICompressorMultithread : ICompressor
     {
-        int CompressMultiThread(FileInfo fileTocompress, string archiveName);
-        int DecompressConcatenatedStreams(FileInfo file, string decompressedFileName);
+        int CompressOnMultipleThreads(FileInfo fileTocompress, string archiveName, bool deleteOriginal = true);
+        int DecompressConcatenatedStreams(FileInfo file, string decompressedFileName, bool deleteOriginal = false);
     }
 }

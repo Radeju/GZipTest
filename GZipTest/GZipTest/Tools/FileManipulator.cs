@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Threading;
 using GZipTest.Globals;
 
@@ -49,8 +50,16 @@ namespace GZipTest.Tools
 
         public void Merge(List<FileInfo> filesToMerge, string outFileName)
         {
+            if (outFileName == null || filesToMerge.Count == 0)
+            {
+                return;
+            }
+            
+            string extension = filesToMerge.Select(fi => fi.Extension)
+                                           .Aggregate((x1, x2) => x1 == x2 ? x1 : string.Empty);
+
             byte[] buffer = new byte[Const.BUFFER_SIZE];
-            using (FileStream outFileStream = File.Create(outFileName))
+            using (FileStream outFileStream = File.Create(outFileName + extension))
             {
                 foreach (var fi in filesToMerge)
                 {

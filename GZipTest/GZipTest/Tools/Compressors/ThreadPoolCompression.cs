@@ -18,13 +18,13 @@ namespace GZipTest.Tools.Compressors
             FileManipulator manipulator = new FileManipulator();
             List<FileInfo> chunks = manipulator.Split(fileToCompress.Name, Const.CHUNK_SIZE_IN_MGBS, archiveName);
             ManualResetEvent[] doneEvents = new ManualResetEvent[chunks.Count];
-            List<CompressorMultithread> compressors = new List<CompressorMultithread>();
+            List<CompressorMultiThread> compressors = new List<CompressorMultiThread>();
 
             int i = 0;
             foreach (var chunk in chunks)
             {
                 doneEvents[i] = new ManualResetEvent(false);
-                CompressorMultithread c = new CompressorMultithread(doneEvents[i], chunk, archiveName + i.ToString(), true);
+                CompressorMultiThread c = new CompressorMultiThread(doneEvents[i], chunk, archiveName + i.ToString(), true);
                 compressors.Add(c);
                 ThreadPool.QueueUserWorkItem(c.ThreadPoolCallback, i);
                 i += 1;

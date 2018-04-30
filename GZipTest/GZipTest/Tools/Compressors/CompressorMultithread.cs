@@ -10,7 +10,7 @@ using GZipTest.Interfaces;
 
 namespace GZipTest.Tools.Compressors
 {
-    public class CompressorMultithread : Compressor, ICompressorMultithread
+    public class CompressorMultiThread : Compressor, ICompressorMultithread
     {
         private readonly ManualResetEvent _doneEvent;
         private readonly FileInfo _fileToCompress;
@@ -19,10 +19,10 @@ namespace GZipTest.Tools.Compressors
 
         public int Status { get; private set; }
 
-        public CompressorMultithread()
+        public CompressorMultiThread()
         { }
 
-        public CompressorMultithread(ManualResetEvent doneEvent, FileInfo fileToCompress, string archiveName, bool deleteOriginal = false)
+        public CompressorMultiThread(ManualResetEvent doneEvent, FileInfo fileToCompress, string archiveName, bool deleteOriginal = false)
         {
             _doneEvent = doneEvent;
             _fileToCompress = fileToCompress;
@@ -37,7 +37,7 @@ namespace GZipTest.Tools.Compressors
             _doneEvent.Set();
         }
 
-        public int CompressMultiThread(FileInfo fileToCompress, string archiveName)
+        public int CompressOnMultipleThreads(FileInfo fileToCompress, string archiveName, bool deleteOriginal = true)
         {
             FileManipulator manipulator = new FileManipulator();
             List<FileInfo> chunks = manipulator.Split(fileToCompress.Name, Const.CHUNK_SIZE_IN_MGBS, archiveName);
@@ -47,7 +47,7 @@ namespace GZipTest.Tools.Compressors
             for (int i = 0; i < chunks.Count; i++)
             {
                 int local = i; //because of access to modified closure
-                Thread th = new Thread(() => { results[local] = Compress(chunks[local], archiveName + local.ToString(), true); });
+                Thread th = new Thread(() => { results[local] = Compress(chunks[local], archiveName + local.ToString(), deleteOriginal); });
                 threads.Add(th);
                 th.Start();
             }
@@ -77,14 +77,19 @@ namespace GZipTest.Tools.Compressors
         /// </summary>
         /// <param name="filePath">FileInfo of gzip concatenated file</param>
         /// <param name="decompressedFileName">Name of the decompressed file</param>
+        /// <param name="deleteOriginal">Bool flag whether to remove the original file</param>
         /// <returns>The decompressed byte content of the gzip file</returns>
-        public int DecompressConcatenatedStreams(FileInfo filePath, string decompressedFileName)
+        public int DecompressConcatenatedStreams(FileInfo filePath, string decompressedFileName, bool deleteOriginal = false)
         {
             List<int> startIndexes = new List<int>();
             byte[] startOfFilePattern = new byte[] { 0x1F, 0x8B, 0x08, 0x00, 0x00, 0x00 };
 
             //Get the bytes of the file
             byte[] fileBytes = File.ReadAllBytes(filePath.Name);
+            if (deleteOriginal)
+            {
+                filePath.Delete();
+            }
             int traversableLength = fileBytes.Length - startOfFilePattern.Length;
 
             for (int i = 0; i <= traversableLength; i++)

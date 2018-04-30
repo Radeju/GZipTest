@@ -29,49 +29,32 @@ namespace GZipTestUnitTest.IntegrationTests
         {
             //Arrange
             ICompressor compressor = new Compressor();
-            FileInfo fiToCompress = new FileInfo(xmlFile);
-            
-            //Act
-            compressor.Compress(fiToCompress, compressedFileName);
-            FileInfo fiToDecompress = new FileInfo(compressedFileName);
-            compressor.Decompress(fiToDecompress, decompressedFilename);
-            FileInfo fiDecompressed = new FileInfo(decompressedFilename);
 
-            //TODO: Assert that compressed-decompressed is the same as original using byte-by-byte comparison
-            //TODO: It can be achieved via reading with streams from both files
-            //Simplified assert
-            Assert.AreEqual(fiDecompressed.Length, fiToCompress.Length);
+            //Act
+            TwoInverseActions(compressor.Compress, compressor.Decompress);
         }
 
         [Test]
         public void CompressMultiThreadAndDecompress()
         {
             //Arrange
-            ICompressorMultithread compressor = new CompressorMultithread();
-            FileInfo fiToCompress = new FileInfo(bigXmlFile);
-            
+            ICompressorMultithread compressor = new CompressorMultiThread();
 
             //Act
-            compressor.CompressMultiThread(fiToCompress, compressedFileName);
-            FileInfo fiToDecompress = new FileInfo(compressedFileName);
-            compressor.DecompressConcatenatedStreams(fiToDecompress, decompressedFilename);
-            FileInfo fiDecompressed = new FileInfo(decompressedFilename);
-
-            //TODO: Assert that compressed-decompressed is the same as original using byte-by-byte comparison
-            //TODO: It can be achieved via reading with streams from both files
-            //Simplified assert
-            Assert.AreEqual(fiDecompressed.Length, fiToCompress.Length);
+            TwoInverseActions(compressor.CompressOnMultipleThreads, compressor.DecompressConcatenatedStreams);
         }
 
-        private void TwoInverseActions(Action<FileInfo,string> first, Action<FileInfo,string> inverseFirst)
+        private void TwoInverseActions(Func<FileInfo,string,bool,int> first, Func<FileInfo,string,bool,int> inverseFirst)
         {
             //Arrange
             FileInfo fiToCompress = new FileInfo(bigXmlFile);
+            bool removeOriginal = false;
+            bool removeCompressed = true;
 
             //Act
-            first(fiToCompress, compressedFileName);
-            FileInfo fiToDecompress = new FileInfo(compressedFileName);
-            inverseFirst(fiToDecompress, decompressedFilename);
+            int firstResult = first(fiToCompress, compressedFileName, removeOriginal);
+            FileInfo fiToDecompress = new FileInfo(compressedFileName + ".gz");
+            int secondResult = inverseFirst(fiToDecompress, decompressedFilename, removeCompressed);
             FileInfo fiDecompressed = new FileInfo(decompressedFilename);
 
             //TODO: Assert that compressed-decompressed is the same as original using byte-by-byte comparison
