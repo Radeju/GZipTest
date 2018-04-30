@@ -13,8 +13,8 @@ namespace GZipTest
         {
             try
             {
-                //args = new[] {"compress", "standard.xml", "standard-comp.gz"};
-                args = new[] { "decompress", "standard-comp.gz", "standard-restored" };
+                args = new[] {"compress", "standard.xml", "standard-comp.gz"};
+                //args = new[] { "decompress", "standard-comp.gz", "standard-restored" };
 
                 Validator val = new Validator();
                 CompressOperations compressOperation;
@@ -34,13 +34,11 @@ namespace GZipTest
                 {
                     case CompressOperations.Compress:
                         ThreadPoolCompression ctp = new ThreadPoolCompression();
-                        ctp.ThreadPoolCompress(fileInfo, outputFilePath);
-                        return 0;
+                        return ctp.ThreadPoolCompress(fileInfo, outputFilePath);
                         //return compressor.Compress(fileInfo, outputFilePath);
 
                     case CompressOperations.Decompress:
-                        compressor.DecompressConcatenatedStreams(inputFilePath, outputFilePath);
-                        return 0;
+                        return compressor.DecompressConcatenatedStreams(fileInfo, outputFilePath);
                         //return compressor.Decompress(fileInfo, outputFilePath);
 
                     default:

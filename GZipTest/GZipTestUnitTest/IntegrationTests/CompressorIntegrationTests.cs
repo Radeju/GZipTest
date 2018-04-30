@@ -3,6 +3,7 @@ using GZipTest.Interfaces;
 using GZipTest.Tools.Compressors;
 using GZipTestUnitTest.Common;
 using NUnit.Framework;
+using System;
 
 namespace GZipTestUnitTest.IntegrationTests
 {
@@ -29,14 +30,17 @@ namespace GZipTestUnitTest.IntegrationTests
             //Arrange
             ICompressor compressor = new Compressor();
             FileInfo fiToCompress = new FileInfo(xmlFile);
-            FileInfo fiToDecompress = new FileInfo(compressedFileName);
-
+            
             //Act
             compressor.Compress(fiToCompress, compressedFileName);
+            FileInfo fiToDecompress = new FileInfo(compressedFileName);
             compressor.Decompress(fiToDecompress, decompressedFilename);
-            
-            //TODO: Assert that compressed-decompressed is the same as original
-            throw new AssertionException("No Assertion implemented yet");
+            FileInfo fiDecompressed = new FileInfo(decompressedFilename);
+
+            //TODO: Assert that compressed-decompressed is the same as original using byte-by-byte comparison
+            //TODO: It can be achieved via reading with streams from both files
+            //Simplified assert
+            Assert.AreEqual(fiDecompressed.Length, fiToCompress.Length);
         }
 
         [Test]
@@ -45,14 +49,35 @@ namespace GZipTestUnitTest.IntegrationTests
             //Arrange
             ICompressorMultithread compressor = new CompressorMultithread();
             FileInfo fiToCompress = new FileInfo(bigXmlFile);
-            FileInfo fiToDecompress = new FileInfo(compressedFileName);
+            
 
             //Act
             compressor.CompressMultiThread(fiToCompress, compressedFileName);
-            compressor.Decompress(fiToDecompress, decompressedFilename);
+            FileInfo fiToDecompress = new FileInfo(compressedFileName);
+            compressor.DecompressConcatenatedStreams(fiToDecompress, decompressedFilename);
+            FileInfo fiDecompressed = new FileInfo(decompressedFilename);
 
-            //TODO: Assert that compressed-decompressed is the same as original
-            throw new AssertionException("No Assertion implemented yet");
+            //TODO: Assert that compressed-decompressed is the same as original using byte-by-byte comparison
+            //TODO: It can be achieved via reading with streams from both files
+            //Simplified assert
+            Assert.AreEqual(fiDecompressed.Length, fiToCompress.Length);
+        }
+
+        private void TwoInverseActions(Action<FileInfo,string> first, Action<FileInfo,string> inverseFirst)
+        {
+            //Arrange
+            FileInfo fiToCompress = new FileInfo(bigXmlFile);
+
+            //Act
+            first(fiToCompress, compressedFileName);
+            FileInfo fiToDecompress = new FileInfo(compressedFileName);
+            inverseFirst(fiToDecompress, decompressedFilename);
+            FileInfo fiDecompressed = new FileInfo(decompressedFilename);
+
+            //TODO: Assert that compressed-decompressed is the same as original using byte-by-byte comparison
+            //TODO: It can be achieved via reading with streams from both files
+            //Simplified assert
+            Assert.AreEqual(fiDecompressed.Length, fiToCompress.Length);
         }
     }
 }
