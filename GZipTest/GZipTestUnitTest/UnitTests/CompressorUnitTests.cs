@@ -3,6 +3,7 @@ using System.Diagnostics;
 using System.IO;
 using GZipTest.Interfaces;
 using GZipTest.Tools;
+using GZipTest.Tools.Compressors;
 using NUnit.Framework;
 using GZipTestUnitTest.Common;
 
@@ -41,7 +42,7 @@ namespace GZipTestUnitTest.UnitTests
         public void CompressMultiThreadedTest()
         {
             //Arrange
-            ICompressor compressor = new Compressor();
+            ICompressorMultithread compressor = new CompressorMultithread();
             FileInfo fileInfo = new FileInfo(bigXmlFile);
 
             //Act
@@ -69,10 +70,10 @@ namespace GZipTestUnitTest.UnitTests
             ICompressor decompressor = new Compressor();
             var path = Directory.GetCurrentDirectory();
             FileInfo fileInfo = new FileInfo(bigXmlFile);
-            CompressorThreadPool ctp = new CompressorThreadPool();
+            ThreadPoolCompression ctp = new ThreadPoolCompression();
 
             //Act
-            ctp.CompressMultithread(fileInfo, compressedFileName);
+            ctp.ThreadPoolCompress(fileInfo, compressedFileName);
         }
     }
 }

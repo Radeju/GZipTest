@@ -8,37 +8,10 @@ using System.Text;
 using System.Threading;
 using GZipTest.Globals;
 
-namespace GZipTest.Tools
+namespace GZipTest.Tools.Compressors
 {
     public class Compressor : ICompressor
     {
-        private int _status;
-        private readonly FileInfo _fileToCompress;
-        private readonly string _archiveName;
-        private readonly ManualResetEvent _doneEvent;
-        private bool _deleteOriginal;
-
-        public int Status => _status;
-
-        public Compressor() { }
-
-        public Compressor(ManualResetEvent doneEvent, FileInfo fileToCompress, string archiveName, bool deleteOriginal = false)
-        {
-            _doneEvent = doneEvent;
-            _fileToCompress = fileToCompress;
-            _archiveName = archiveName;
-            _deleteOriginal = deleteOriginal;
-        }
-
-        public void ThreadPoolCallback(object threadContext)
-        {
-            int threadIndex = (int)threadContext;
-            Console.WriteLine($"Thread {threadIndex} started...");
-            _status = Compress(_fileToCompress, _archiveName, true);
-            Console.WriteLine($"Thread {threadIndex} result calculcated {Status}.");
-            _doneEvent.Set();
-        }
-
         public int Compress(FileInfo fileToCompress, string archiveName, bool deleteOriginal = false)
         {
             if (fileToCompress == null || archiveName == null)
@@ -78,35 +51,6 @@ namespace GZipTest.Tools
             return 0;
         }
         
-        public void CompressMultiThread(FileInfo fileToCompress, string archiveName)
-        {
-            //string folderName = "Chunks";
-            FileManipulator manipulator = new FileManipulator();
-            List<FileInfo> chunks = manipulator.Split(fileToCompress.Name, Const.CHUNK_SIZE_IN_MGBS, archiveName);
-            List<Thread> threads = new List<Thread>();
-
-            for (int i = 0; i < chunks.Count; i++)
-            {
-                int local = i; //because of access to modified closure, not most elegant. foreach loop?
-                Thread th = new Thread(() => { Compress(chunks[local], archiveName + local.ToString(), true); });
-                threads.Add(th);
-                th.Start();
-            }
-
-            foreach (var th in threads)
-            {
-                th.Join();
-            }
-
-            List<FileInfo> compressedChunks = new List<FileInfo>();
-            foreach (var chunk in chunks)
-            {
-                compressedChunks.Add(new FileInfo(chunk.Name + ".gz"));
-            }
-
-            manipulator.Merge(compressedChunks, archiveName);
-        }
-
         public int Decompress(FileInfo fileToDecompress, string decompressedFileName, bool deleteOriginal = false)
         {
             if (fileToDecompress == null || decompressedFileName == null)
@@ -142,7 +86,7 @@ namespace GZipTest.Tools
         /// </summary>
         /// <param name="filePath">The path to the gzip file</param>
         /// <returns>The decompressed byte content of the gzip file</returns>
-        public int GUnzipConcatenatedFile(string filePath, string decompressedFileName)
+        public int DecompressConcatenatedStreams(string filePath, string decompressedFileName)
         {
             //Get the bytes of the file
             byte[] FileBytes = File.ReadAllBytes(filePath);

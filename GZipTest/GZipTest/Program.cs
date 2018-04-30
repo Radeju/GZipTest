@@ -1,10 +1,9 @@
 ﻿using System;
 using System.IO;
-using System.Threading;
 using GZipTest.Tools;
 using GZipTest.Enums;
 using GZipTest.Interfaces;
-using ThreadPool = System.Threading.ThreadPool;
+using GZipTest.Tools.Compressors;
 
 namespace GZipTest
 {
@@ -29,18 +28,18 @@ namespace GZipTest
                 PathCorrector corrector = new PathCorrector();
                 string outputFilePath = corrector.CorrectOutput(args[2]);
 
-                ICompressor compressor = new Compressor();
+                ICompressorMultithread compressor = new CompressorMultithread();
                 FileInfo fileInfo = new FileInfo(inputFilePath);
                 switch (compressOperation)
                 {
                     case CompressOperations.Compress:
-                        CompressorThreadPool ctp = new CompressorThreadPool();
-                        ctp.CompressMultithread(fileInfo, outputFilePath);
+                        ThreadPoolCompression ctp = new ThreadPoolCompression();
+                        ctp.ThreadPoolCompress(fileInfo, outputFilePath);
                         return 0;
                         //return compressor.Compress(fileInfo, outputFilePath);
 
                     case CompressOperations.Decompress:
-                        compressor.GUnzipConcatenatedFile(inputFilePath, outputFilePath);
+                        compressor.DecompressConcatenatedStreams(inputFilePath, outputFilePath);
                         return 0;
                         //return compressor.Decompress(fileInfo, outputFilePath);
 
