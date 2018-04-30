@@ -62,7 +62,7 @@ namespace GZipTestUnitTest.UnitTests
             FileInfo fileInfo = new FileInfo(bigXmlFile);
 
             //Act
-            ThreadPoolApproach.CompressMultithread(fileInfo, compressedFileName);
+            CompressorThreadPool.CompressMultithread(fileInfo, compressedFileName);
         }
     }
 }

@@ -10,17 +10,15 @@ using GZipTest.Globals;
 
 namespace GZipTest.Tools
 {
-    public class Compressor : ICompressor, IDisposable
+    public class Compressor : ICompressor
     {
         private int _status;
-        private FileInfo _fileToCompress;
-        private string _archiveName;
-        private ManualResetEvent _doneEvent;
+        private readonly FileInfo _fileToCompress;
+        private readonly string _archiveName;
+        private readonly ManualResetEvent _doneEvent;
         private bool _deleteOriginal;
 
         public int Status => _status;
-
-        public Stream Fs { get; set; }
 
         public Compressor() { }
 
@@ -30,14 +28,13 @@ namespace GZipTest.Tools
             _fileToCompress = fileToCompress;
             _archiveName = archiveName;
             _deleteOriginal = deleteOriginal;
-            Fs = null;
         }
 
         public void ThreadPoolCallback(object threadContext)
         {
             int threadIndex = (int)threadContext;
             Console.WriteLine($"Thread {threadIndex} started...");
-            _status = CompressNoDispose(_fileToCompress, _archiveName, true);
+            _status = Compress(_fileToCompress, _archiveName, true);
             Console.WriteLine($"Thread {threadIndex} result calculcated {Status}.");
             _doneEvent.Set();
         }
@@ -80,46 +77,7 @@ namespace GZipTest.Tools
 
             return 0;
         }
-
-        public int CompressNoDispose(FileInfo fileToCompress, string archiveName, bool deleteOriginal = false)
-        {
-            if (fileToCompress == null || archiveName == null)
-            {
-                return 1;
-            }
-
-            using (FileStream originalFileStream = fileToCompress.OpenRead())
-            {
-                if ((File.GetAttributes(fileToCompress.FullName) & FileAttributes.Hidden)
-                    != FileAttributes.Hidden & fileToCompress.Extension != ".gz")
-                {
-                    using (FileStream outFileStream = File.Create(archiveName + ".gz"))
-                    {
-                        using (GZipStream compress = new GZipStream(outFileStream, CompressionMode.Compress))
-                        {
-                            byte[] buffer = new byte[Const.BUFFER_SIZE];
-                            int bytesRead;
-                            while ((bytesRead = originalFileStream.Read(buffer, 0, buffer.Length)) != 0)
-                            {
-                                compress.Write(buffer, 0, bytesRead);
-                            }
-                        }
-                    }
-                }
-                else
-                {
-                    return 1;
-                }
-            }
-
-            if (deleteOriginal)
-            {
-                fileToCompress.Delete();
-            }
-
-            return 0;
-        }
-
+        
         public void CompressMultiThread(FileInfo fileToCompress, string archiveName)
         {
             //string folderName = "Chunks";
@@ -271,12 +229,12 @@ namespace GZipTest.Tools
             {
                 foreach (byte[] Chunk in Chunks)
                 {
-                    using (MemoryStream MStream = new MemoryStream(Chunk))
+                    using (MemoryStream mStream = new MemoryStream(Chunk))
                     {
-                        using (GZipStream GZStream = new GZipStream(MStream, CompressionMode.Decompress))
+                        using (GZipStream gzStream = new GZipStream(mStream, CompressionMode.Decompress))
                         {
                             int bytesRead = 0;
-                            while ((bytesRead = GZStream.Read(buffer, 0, buffer.Length)) != 0)
+                            while ((bytesRead = gzStream.Read(buffer, 0, buffer.Length)) != 0)
                             {
                                 outFileStream.Write(buffer, 0, bytesRead);
                             }
@@ -286,65 +244,6 @@ namespace GZipTest.Tools
 
                 return 1;
             }
-        }
-
-        public void Dispose()
-        {
-            Fs.Dispose();
-        }
-    }
-
-    /// <summary>
-    /// Created basing on https://docs.microsoft.com/en-us/dotnet/csharp/programming-guide/concepts/threading/how-to-use-a-thread-pool
-    /// </summary>
-    public static class ThreadPoolApproach
-    {
-        public static void CompressMultithread(FileInfo fileToCompress, string archiveName)
-        {
-            //string folderName = "Chunks";
-            FileManipulator manipulator = new FileManipulator();
-            List<FileInfo> chunks = manipulator.Split(fileToCompress.Name, Const.CHUNK_SIZE_IN_MGBS, archiveName);
-            List<Compressor> compressors = new List<Compressor>();
-            List<Stream> streams = new List<Stream>();
-            ManualResetEvent[] doneEvents = new ManualResetEvent[chunks.Count];
-
-            int i = 0;
-            foreach (var chunk in chunks)
-            {
-                doneEvents[i] = new ManualResetEvent(false);
-                Compressor c = new Compressor(doneEvents[i], chunk, archiveName + i.ToString(), true);
-                compressors.Add(c);
-                ThreadPool.QueueUserWorkItem(c.ThreadPoolCallback, i);
-                i += 1;
-            }
-
-            WaitHandle.WaitAll(doneEvents);
-
-            List<FileInfo> compressedChunks = new List<FileInfo>();
-            foreach (var chunk in chunks)
-            {
-                compressedChunks.Add(new FileInfo(chunk.Name + ".gz"));
-                streams.Add(File.OpenRead(chunk.Name + ".gz"));
-            }
-
-            foreach (var c in compressors)
-            {
-                // streams.Add(c.Fs);
-            }
-
-            byte[] buffer = new byte[Const.BUFFER_SIZE];
-            using (StreamConcatenator sc = new StreamConcatenator(streams))
-            {
-                using (FileStream outFile = File.Create(archiveName + ".gz"))
-                {
-                    int bytesRead;
-                    while ((bytesRead = sc.Read(buffer, 0, buffer.Length)) != 0)
-                    {
-                        outFile.Write(buffer, 0, bytesRead);
-                    }
-                }
-            }
-            //manipulator.Merge(compressedChunks, archiveName);
         }
     }
 }

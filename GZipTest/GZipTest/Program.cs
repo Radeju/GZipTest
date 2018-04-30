@@ -14,7 +14,7 @@ namespace GZipTest
         {
             try
             {
-                //args = new[] {"compress", "standard.xml", "standard-comp"};
+                //args = new[] {"compress", "standard.xml", "standard-comp.gz"};
                 args = new[] { "decompress", "standard-comp.gz", "standard-restored" };
 
                 Validator val = new Validator();
@@ -34,7 +34,8 @@ namespace GZipTest
                 switch (compressOperation)
                 {
                     case CompressOperations.Compress:
-                        Tools.ThreadPoolApproach.CompressMultithread(fileInfo, outputFilePath);
+                        CompressorThreadPool ctp = new CompressorThreadPool();
+                        ctp.CompressMultithread(fileInfo, outputFilePath);
                         return 0;
                         //return compressor.Compress(fileInfo, outputFilePath);
 

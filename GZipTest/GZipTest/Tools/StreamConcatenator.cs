@@ -6,6 +6,7 @@ using System.Text;
 
 namespace GZipTest.Tools
 {
+#warning remove?
     public class StreamConcatenator : Stream
     {
         private Queue<Stream> _streams;
