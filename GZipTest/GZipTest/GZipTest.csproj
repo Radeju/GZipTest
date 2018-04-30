@@ -51,7 +51,6 @@
     <Compile Include="Tools\CompressorThreadPool.cs" />
     <Compile Include="Tools\FileManipulator.cs" />
     <Compile Include="Tools\PathCorrector.cs" />
-    <Compile Include="Tools\StreamConcatenator.cs" />
     <Compile Include="Tools\Validator.cs" />
   </ItemGroup>
   <ItemGroup>
