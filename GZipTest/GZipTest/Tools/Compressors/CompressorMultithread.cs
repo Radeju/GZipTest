@@ -51,8 +51,6 @@ namespace GZipTest.Tools.Compressors
 
         #region protected methods
 
-
-
         protected void FindMatches(List<long> startIndexes, byte[] startOfFilePattern,
             byte[] buffer, int traversableLength, int bufferReadCount = 0, int byteCount = 0)
         {
