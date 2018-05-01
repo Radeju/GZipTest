@@ -4,12 +4,19 @@ using System.IO;
 using System.IO.Compression;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using GZipTest.Globals;
 
 namespace GZipTest.Tools.Compressors
 {
     public class CompressorMultiThreadLowMemory : CompressorMultiThread
     {
+        public CompressorMultiThreadLowMemory
+            (ManualResetEvent doneEvent, FileInfo fileToCompress, string archiveName, bool deleteOriginal = false) :
+            base(doneEvent, fileToCompress, archiveName, deleteOriginal)
+        {
+
+        }
 
         public override int DecompressConcatenatedStreams(FileInfo filePath, string decompressedFileName,
             bool deleteOriginal = false)
@@ -64,10 +71,6 @@ namespace GZipTest.Tools.Compressors
                     for (int i = 0; i < startIndexes.Count - 1; i++)
                     {
                         byte[] chunk = CreateChunksFromStream(startIndexes[i], startIndexes[i+1], inFileStream);
-
-                        //long length = startIndexes[i + 1] - startIndexes[i];
-                        //byte[] chunk = new byte[length];
-                        //inFileStream.Read(chunk, 0, chunk.Length);
 
                         using (MemoryStream mStream = new MemoryStream(chunk))
                         {

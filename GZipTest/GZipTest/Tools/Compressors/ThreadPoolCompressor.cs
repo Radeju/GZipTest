@@ -24,7 +24,8 @@ namespace GZipTest.Tools.Compressors
             foreach (var chunk in chunks)
             {
                 doneEvents[i] = new ManualResetEvent(false);
-                ICompressorMultiThread c = new CompressorMultiThread(doneEvents[i], chunk, archiveName + i.ToString(), true);
+#warning think how to improve this
+                ICompressorMultiThread c = new CompressorMultiThreadLowMemory(doneEvents[i], chunk, archiveName + i.ToString(), true);
                 compressors.Add(c);
                 ThreadPool.QueueUserWorkItem(c.ThreadPoolCallback, i);
                 i += 1;

@@ -4,22 +4,20 @@ using System.IO;
 using System.IO.Compression;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using GZipTest.Globals;
 
 namespace GZipTest.Tools.Compressors
 {
     public class CompressorMultiThreadHighMemory : CompressorMultiThread
     {
-        /// <summary>
-        /// Provides a workaround to decompressing gzip files that are concatenated
-        /// I used http://www.zlib.org/rfc-gzip.html for header specification of GZip.
-        /// Credit also goes to https://bamcisnetworks.wordpress.com/2017/05/22/decompressing-concatenated-gzip-files-in-c-received-from-aws-cloudwatch-logs/
-        /// for describing the issue of decompressing concatenated zipped files.
-        /// </summary>
-        /// <param name="filePath">FileInfo of gzip concatenated file</param>
-        /// <param name="decompressedFileName">Name of the decompressed file</param>
-        /// <param name="deleteOriginal">Bool flag whether to remove the original file</param>
-        /// <returns>The decompressed byte content of the gzip file</returns>
+        public CompressorMultiThreadHighMemory
+            (ManualResetEvent doneEvent, FileInfo fileToCompress, string archiveName, bool deleteOriginal = false) :
+            base(doneEvent, fileToCompress, archiveName, deleteOriginal)
+        {
+
+        }
+
         public override int DecompressConcatenatedStreams(FileInfo filePath, string decompressedFileName, bool deleteOriginal = false)
         {
             List<long> startIndexes = new List<long>();
