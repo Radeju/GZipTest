@@ -4,12 +4,15 @@ using GZipTestUnitTest.UnitTests;
 
 namespace GZipTestUnitTest.Common
 {
-    static class CommonTests
+    static class Common
     {
         public static void SetDirectory()
         {
             string dir = Path.GetDirectoryName(typeof(CompressorUnitTests).Assembly.Location);
-            Environment.CurrentDirectory = dir;
+            if (dir != null)
+            {
+                Environment.CurrentDirectory = dir;
+            }
         }
     }
 }

@@ -1,10 +1,8 @@
 ﻿using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Security.Cryptography.X509Certificates;
 using System.Threading;
 using GZipTest.Globals;
-using GZipTest.Interfaces;
 
 namespace GZipTest.Tools.Compressors
 {
@@ -21,6 +19,7 @@ namespace GZipTest.Tools.Compressors
             List<CompressorMultiThread> compressors = new List<CompressorMultiThread>();
 
             int i = 0;
+            //compress each chunk separately using ThreadPool
             foreach (var chunk in chunks)
             {
                 doneEvents[i] = new ManualResetEvent(false);
@@ -41,6 +40,7 @@ namespace GZipTest.Tools.Compressors
             //merge results back together
             manipulator.Merge(compressedChunks, archiveName);
 
+            //bit AND on results of each of the compressors
             return compressors.Select(c => c.Status).Aggregate((x1, x2) => x1 & x2);
         }
     }

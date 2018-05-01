@@ -55,11 +55,11 @@ namespace GZipTest.Tools
                 return;
             }
             
-            string extension = filesToMerge.Select(fi => fi.Extension)
+            string commonExtension = filesToMerge.Select(fi => fi.Extension)
                                            .Aggregate((x1, x2) => x1 == x2 ? x1 : string.Empty);
 
             byte[] buffer = new byte[Const.BUFFER_SIZE];
-            using (FileStream outFileStream = File.Create(outFileName + extension))
+            using (FileStream outFileStream = File.Create(outFileName + commonExtension))
             {
                 foreach (var fi in filesToMerge)
                 {

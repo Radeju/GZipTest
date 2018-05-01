@@ -16,6 +16,7 @@ namespace GZipTest.Tools.Compressors
         private readonly FileInfo _fileToCompress;
         private readonly string _archiveName;
         private readonly bool _deleteOriginal;
+        private readonly byte[] _startOfFilePattern = new byte[] { 0x1F, 0x8B, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00 };
 
         public int Status { get; private set; }
 
@@ -37,53 +38,34 @@ namespace GZipTest.Tools.Compressors
             _doneEvent.Set();
         }
 
-        public int CompressOnMultipleThreads(FileInfo fileToCompress, string archiveName, bool deleteOriginal = true)
+        public int DecompressConcatenatedStreams(FileInfo filePath, string decompressedFileName,
+            bool deleteOriginal = false)
         {
-            FileManipulator manipulator = new FileManipulator();
-            List<FileInfo> chunks = manipulator.Split(fileToCompress.Name, Const.CHUNK_SIZE_IN_MGBS, archiveName);
-            List<Thread> threads = new List<Thread>();
-            int[] results = new int[chunks.Count];
+            List<int> startIndexes = new List<int>();
+            byte[] startOfFilePattern = new byte[] { 0x1F, 0x8B, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00 };
+            const long memoryThreshold = 100 * 1024 * 1024;
 
-            for (int i = 0; i < chunks.Count; i++)
-            {
-                int local = i; //because of access to modified closure
-                Thread th = new Thread(() => { results[local] = Compress(chunks[local], archiveName + local.ToString(), deleteOriginal); });
-                threads.Add(th);
-                th.Start();
-            }
+            int result = filePath.Length > memoryThreshold ? 
+                DecompressConcatenatedStreamsLowMemoryUsage(filePath, decompressedFileName, deleteOriginal) : 
+                DecompressConcatenatedStreamsHighMemoryUsage(filePath, decompressedFileName, deleteOriginal);
 
-            foreach (var th in threads)
-            {
-                th.Join();
-            }
-
-            List<FileInfo> compressedChunks = new List<FileInfo>();
-            foreach (var chunk in chunks)
-            {
-                compressedChunks.Add(new FileInfo(chunk.Name + ".gz"));
-            }
-
-            //merge results back together
-            manipulator.Merge(compressedChunks, archiveName);
-
-            return results.Aggregate((x1, x2) => x1 & x2);
+            return result;
         }
 
         /// <summary>
         /// Provides a workaround to decompressing gzip files that are concatenated
         /// I used http://www.zlib.org/rfc-gzip.html for header specification of GZip.
-        /// Credit goes to https://bamcisnetworks.wordpress.com/2017/05/22/decompressing-concatenated-gzip-files-in-c-received-from-aws-cloudwatch-logs/
-        /// for describing the issue of decompressing concatenated zipped files. I removed most of the comments, for more details
-        /// please read the above blog post. The method itself was heavily modified to be able to work against very big files.
+        /// Credit also goes to https://bamcisnetworks.wordpress.com/2017/05/22/decompressing-concatenated-gzip-files-in-c-received-from-aws-cloudwatch-logs/
+        /// for describing the issue of decompressing concatenated zipped files.
         /// </summary>
         /// <param name="filePath">FileInfo of gzip concatenated file</param>
         /// <param name="decompressedFileName">Name of the decompressed file</param>
         /// <param name="deleteOriginal">Bool flag whether to remove the original file</param>
         /// <returns>The decompressed byte content of the gzip file</returns>
-        public int DecompressConcatenatedStreams(FileInfo filePath, string decompressedFileName, bool deleteOriginal = false)
+        public int DecompressConcatenatedStreamsHighMemoryUsage(FileInfo filePath, string decompressedFileName, bool deleteOriginal = false)
         {
             List<int> startIndexes = new List<int>();
-            byte[] startOfFilePattern = new byte[] { 0x1F, 0x8B, 0x08, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00 };
+
 
             //Get the bytes of the file
             byte[] fileBytes = File.ReadAllBytes(filePath.Name);
@@ -91,37 +73,66 @@ namespace GZipTest.Tools.Compressors
             {
                 filePath.Delete();
             }
-            int traversableLength = fileBytes.Length - startOfFilePattern.Length;
+            int traversableLength = fileBytes.Length - _startOfFilePattern.Length;
+            FindMatches(startIndexes, _startOfFilePattern, fileBytes, traversableLength);
 
-            for (int i = 0; i <= traversableLength; i++)
-            {
-                bool match = true;
-                for (int j = 0; j < startOfFilePattern.Length; j++)
-                {
-                    //4th bit can have all the values between 0 to 4 (5-7 reserved) depending on the input file
-                    //so we cannot check it against the pattern
-                    if (j != 4 && fileBytes[i + j] != startOfFilePattern[j])
-                    {
-                        match = false;
-                        break;
-                    }
-                }
-
-                if (match == true)
-                {
-                    startIndexes.Add(i);
-                    i += startOfFilePattern.Length;
-                }
-            }
-
-            //In case the pattern doesn't match, just start from the beginning of the file
+            //Start from the beginning if you did not find anything
             if (!startIndexes.Any())
             {
                 startIndexes.Add(0);
             }
 
-            List<byte[]> chunks = new List<byte[]>();
+            List<byte[]> chunks = CreateChunksFromFile(startIndexes, fileBytes);
+            return ConcatenateDecompressedChunks(chunks, decompressedFileName);
+        }
 
+        public int DecompressConcatenatedStreamsLowMemoryUsage(FileInfo filePath, string decompressedFileName,
+            bool deleteOriginal = false)
+        {
+            List<int> startIndexes = new List<int>();
+            ConcurrentBuffer concBuffer = new ConcurrentBuffer(Const.CHUNK_SIZE_IN_MGBS * 1024 * 1024);
+            using (FileStream inFileStream = File.OpenRead(filePath.Name))
+            {
+                int bytesRead = 0;
+                int bufferReadCount = 0;
+                int byteCount = concBuffer.MaxCount;
+                int offset = 0;
+                while ((bytesRead = inFileStream.Read(concBuffer.Buffer, offset, byteCount)) 
+                        != 0)
+                {
+                    int traversableLength = bytesRead - _startOfFilePattern.Length;
+                    FindMatches(startIndexes, _startOfFilePattern, concBuffer.Buffer, bufferReadCount, byteCount, traversableLength);
+
+                    //important piece - make sure that pattern split across two buffers is not lost
+                    if (bytesRead == byteCount)
+                    {
+                        concBuffer.MoveLastBytesToBeginning(_startOfFilePattern.Length);
+                    }
+                    //needed to wrap the last couple of bytes to the next buffer
+                    if (bufferReadCount == 0)
+                    {
+                        byteCount -= _startOfFilePattern.Length;
+                        offset += _startOfFilePattern.Length;
+                    }
+                    bufferReadCount += 1;
+                }
+            }
+
+            if (deleteOriginal)
+            {
+                filePath.Delete();
+            }
+
+            return 0;
+        }
+
+        #endregion public methods endregion
+
+        #region private methods
+
+        private List<byte[]> CreateChunksFromFile(List<int> startIndexes, byte[] fileBytes)
+        {
+            List<byte[]> chunks = new List<byte[]>();
             for (int i = 0; i < startIndexes.Count; i++)
             {
                 //int start = ;
@@ -142,61 +153,31 @@ namespace GZipTest.Tools.Compressors
                 }
             }
 
-            return ConcatenateDecompressedChunks(chunks, decompressedFileName);
+            return chunks;
         }
 
-        public class ConcBuffer
+        private void FindMatches(List<int> startIndexes, byte[] startOfFilePattern,
+            byte[] buffer, int traversableLength, int bufferReadCount = 0, int byteCount = 0)
         {
-
-        }
-
-        public int DecompressConcatenatedStreamsLowMemory(FileInfo filePath, string decompressedFileName,
-            bool deleteOriginal = false)
-        {
-            List<int> startIndexes = new List<int>();
-            byte[] startOfFilePattern = new byte[] { 0x1F, 0x8B, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00 };
-            //byte[] buffer = new byte[Const.CHUNK_SIZE_IN_MGBS * 1024 * 1024];
-            ConcurrentBuffer concBuffer = new ConcurrentBuffer(Const.CHUNK_SIZE_IN_MGBS * 1024 * 1024);
-            using (FileStream inFileStream = File.OpenRead(filePath.Name))
+            for (int i = 0; i <= traversableLength; i++)
             {
-                int bytesRead = 0;
-                //wrap enough so that we do not loose filePattern
-                while ((bytesRead = inFileStream.Read(concBuffer.Buffer, 0, concBuffer.MaxCount - startOfFilePattern.Length)) 
-                        != 0)
+                bool match = true;
+                for (int j = 0; j < startOfFilePattern.Length; j++)
                 {
-                    int traversableLength = concBuffer.MaxCount - startOfFilePattern.Length;
-                    for (int i = 0; i <= traversableLength; i++)
+                    if (buffer[i + j] != startOfFilePattern[j])
                     {
-                        bool match = true;
-                        for (int j = 0; j < startOfFilePattern.Length; j++)
-                        {
-                            if (concBuffer.Buffer[i + j] != startOfFilePattern[j])
-                            {
-                                match = false;
-                                break;
-                            }
-                        }
-
-                        if (match == true)
-                        {
-                            startIndexes.Add(i);
-                            i += startOfFilePattern.Length;
-                        }
+                        match = false;
+                        break;
                     }
                 }
-            }
 
-            if (deleteOriginal)
-            {
-                filePath.Delete();
+                if (match == true)
+                {
+                    startIndexes.Add(i + bufferReadCount * byteCount);
+                    i += startOfFilePattern.Length;
+                }
             }
-
-            return 1;
         }
-
-        #endregion public methods endregion
-
-        #region private methods
 
         private int ConcatenateDecompressedChunks(List<byte[]> chunks, string decompressedFileName)
         {

@@ -1,5 +1,4 @@
-﻿1) Take out common part of CompressorMultithread.cs and ThreadPoolCompression.cs out, probably to Filemanipulator
-2) Correct DecompressConcatenatedStreams so that it does not allocate such a big table - make it in chunks
+﻿2) Correct DecompressConcatenatedStreams so that it does not allocate such a big table - make it in chunks
 3) Add Integration tests
 4) Correct the Program.cs Main method so it looks human
 5) in integration test take out the common part to separate function

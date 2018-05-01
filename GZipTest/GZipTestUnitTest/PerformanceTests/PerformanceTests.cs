@@ -13,7 +13,7 @@ namespace GZipTestUnitTest.PerformanceTests
         [OneTimeSetUp]
         public void CompressorUnitTestsInit()
         {
-            CommonTests.SetDirectory();
+            Common.Common.SetDirectory();
         }
 
         [Test]
@@ -21,13 +21,6 @@ namespace GZipTestUnitTest.PerformanceTests
         {
             CompressorUnitTests compressor = new CompressorUnitTests();
             TimeSpan time = MeasureTime(compressor.CompressTest);
-        }
-
-        [Test]
-        public void MeasureCompressorMultiThreadTests()
-        {
-            CompressorUnitTests compressor = new CompressorUnitTests();
-            TimeSpan time = MeasureTime(compressor.CompressMultiThreadedTest);
         }
 
         [Test]

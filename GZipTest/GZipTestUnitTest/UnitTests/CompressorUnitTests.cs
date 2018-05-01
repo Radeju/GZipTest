@@ -20,7 +20,7 @@ namespace GZipTestUnitTest.UnitTests
         [OneTimeSetUp]
         public void CompressorUnitTestsInit()
         {
-            CommonTests.SetDirectory();
+            Common.Common.SetDirectory();
         }
 
         [Test]
@@ -32,20 +32,6 @@ namespace GZipTestUnitTest.UnitTests
 
             //Act
             int result = compressor.Compress(fileInfo, compressedFileName);
-
-            //Assert
-            Assert.AreEqual(result, 0);
-        }
-
-        [Test]
-        public void CompressMultiThreadedTest()
-        {
-            //Arrange
-            ICompressorMultithread compressor = new CompressorMultiThread();
-            FileInfo fileInfo = new FileInfo(bigXmlFile);
-
-            //Act
-            int result = compressor.CompressOnMultipleThreads(fileInfo, compressedFileName);
 
             //Assert
             Assert.AreEqual(result, 0);
@@ -83,13 +69,17 @@ namespace GZipTestUnitTest.UnitTests
         public void DecompressConcatenatedStreamsTest()
         {
             //Arrange
-            ICompressorMultithread compressor = new CompressorMultiThread();
+            //ICompressorMultithread compressor = new CompressorMultiThread();
+            CompressorMultiThread compressor = new CompressorMultiThread();
             var fileInfo = File.Exists(compressedFileName) ? 
                 new FileInfo(compressedFileName) : 
                 new FileInfo(compressedFileName + ".gz");
-             
+
             //Act
-            int result = compressor.DecompressConcatenatedStreams(fileInfo, decompressedFilename);
+            int result2 = compressor.DecompressConcatenatedStreamsLowMemoryUsage(fileInfo, decompressedFilename);
+            int result = compressor.DecompressConcatenatedStreamsHighMemoryUsage(fileInfo, decompressedFilename);
+
+            
 
             //Assert
             Assert.AreEqual(result, 0);

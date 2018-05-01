@@ -27,19 +27,17 @@ namespace GZipTest
 
                 PathCorrector corrector = new PathCorrector();
                 string outputFilePath = corrector.CorrectOutput(args[2]);
-
-                ICompressorMultithread compressor = new CompressorMultiThread();
                 FileInfo fileInfo = new FileInfo(inputFilePath);
+
                 switch (compressOperation)
                 {
                     case CompressOperations.Compress:
                         ThreadPoolCompression ctp = new ThreadPoolCompression();
                         return ctp.ThreadPoolCompress(fileInfo, outputFilePath);
-                        //return compressor.Compress(fileInfo, outputFilePath);
 
                     case CompressOperations.Decompress:
-                        return compressor.DecompressConcatenatedStreams(fileInfo, outputFilePath);
-                        //return compressor.Decompress(fileInfo, outputFilePath);
+                        ICompressorMultithread compressor = new CompressorMultiThread();
+                        return compressor.DecompressConcatenatedStreamsHighMemoryUsage(fileInfo, outputFilePath);
 
                     default:
                         return 1;

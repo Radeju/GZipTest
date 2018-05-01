@@ -7,35 +7,47 @@ namespace GZipTest.Tools
 {
     public class ConcurrentBuffer
     {
-        private readonly LinkedList<byte> _bufferList;
         private byte[] _buffer;
-        private bool _bufferChanged;
+        private int _index;
+
         public int MaxCount { get; }
-        
+
+        public int Index
+        {
+            get { return _index; }
+            set
+            {
+                if (value >= MaxCount)
+                {
+                    _index = value % MaxCount;
+                }
+
+            }
+        }
+
         public byte[] Buffer
         {
             get
             {
-                lock (_bufferList)
+                lock (_buffer)
                 {
-                    if (_bufferChanged || _buffer == null)  //logic to reduce amount of .ToArray() calls
-                    {
-                        _buffer = _bufferList.ToArray();
-                        _bufferChanged = false;
-                    }
-
                     return _buffer;
                 }
             }
             set
             {
-                lock (_bufferList)
+                lock (_buffer)
                 {
-                    foreach (byte b in value)
+                    int srcLen = value.Length;
+                    int start = 0;
+                    int countToEnd = Math.Min(srcLen, MaxCount - _index);
+                    do
                     {
-                        PutNoLock(b);
-                    }
-                    _bufferChanged = true;
+                        Array.Copy(value, start, _buffer, _index, countToEnd);
+                        start = start + countToEnd;
+                        srcLen -= countToEnd;
+                        _index += countToEnd;
+                    } while (srcLen > 0);
                 }
             }
         }
@@ -43,26 +55,20 @@ namespace GZipTest.Tools
         public ConcurrentBuffer(int maxCount)
         {
             MaxCount = maxCount;
-            _bufferList = new LinkedList<byte>();
-            _bufferChanged = true;
+            _index = 0;
+            _buffer = new byte[MaxCount];
         }
 
-        public void Put(byte b)
+        public void MoveLastBytesToBeginning(int byteCount)
         {
-            lock (_bufferList)
+            if (byteCount >= MaxCount)
             {
-                PutNoLock(b);
+                byteCount = byteCount % MaxCount;
             }
 
-            _bufferChanged = true;
-        }
-
-        private void PutNoLock(byte b)
-        {
-            _bufferList.AddFirst(b);
-            if (_bufferList.Count > MaxCount)
+            for (int i = 0; i < byteCount; i++)
             {
-                _bufferList.RemoveLast();
+                _buffer[i] = Buffer[MaxCount - byteCount + i];
             }
         }
     }

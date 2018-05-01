@@ -18,7 +18,7 @@ namespace GZipTestUnitTest.IntegrationTests
         [OneTimeSetUp]
         public void CompressorUnitTestsInit()
         {
-            CommonTests.SetDirectory();
+            Common.Common.SetDirectory();
         }
 
         /// <summary>
@@ -32,16 +32,6 @@ namespace GZipTestUnitTest.IntegrationTests
 
             //Act
             TwoInverseActions(compressor.Compress, compressor.Decompress);
-        }
-
-        [Test]
-        public void CompressMultiThreadAndDecompress()
-        {
-            //Arrange
-            ICompressorMultithread compressor = new CompressorMultiThread();
-
-            //Act
-            TwoInverseActions(compressor.CompressOnMultipleThreads, compressor.DecompressConcatenatedStreams);
         }
 
         private void TwoInverseActions(Func<FileInfo,string,bool,int> first, Func<FileInfo,string,bool,int> inverseFirst)

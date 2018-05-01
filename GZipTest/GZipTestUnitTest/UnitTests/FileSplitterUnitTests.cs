@@ -18,7 +18,7 @@ namespace GZipTestUnitTest.UnitTests
         [OneTimeSetUp]
         public void CompressorUnitTestsInit()
         {
-            CommonTests.SetDirectory();
+            Common.Common.SetDirectory();
         }
 
         [Test]
