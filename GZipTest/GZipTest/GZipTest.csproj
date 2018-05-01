@@ -51,6 +51,7 @@
     <Compile Include="Tools\Compressors\Compressor.cs" />
     <Compile Include="Tools\Compressors\CompressorMultiThread.cs" />
     <Compile Include="Tools\Compressors\ThreadPoolCompression.cs" />
+    <Compile Include="Tools\ConcurrentBuffer.cs" />
     <Compile Include="Tools\FileManipulator.cs" />
     <Compile Include="Tools\PathCorrector.cs" />
     <Compile Include="Tools\Validator.cs" />

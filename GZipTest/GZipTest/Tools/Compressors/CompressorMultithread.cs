@@ -19,8 +19,8 @@ namespace GZipTest.Tools.Compressors
 
         public int Status { get; private set; }
 
-        public CompressorMultiThread()
-        { }
+        #region public methods endregion
+        public CompressorMultiThread() { }
 
         public CompressorMultiThread(ManualResetEvent doneEvent, FileInfo fileToCompress, string archiveName, bool deleteOriginal = false)
         {
@@ -71,9 +71,10 @@ namespace GZipTest.Tools.Compressors
 
         /// <summary>
         /// Provides a workaround to decompressing gzip files that are concatenated
+        /// I used http://www.zlib.org/rfc-gzip.html for header specification of GZip.
         /// Credit goes to https://bamcisnetworks.wordpress.com/2017/05/22/decompressing-concatenated-gzip-files-in-c-received-from-aws-cloudwatch-logs/
         /// for describing the issue of decompressing concatenated zipped files. I removed most of the comments, for more details
-        /// please read the above blog post.
+        /// please read the above blog post. The method itself was heavily modified to be able to work against very big files.
         /// </summary>
         /// <param name="filePath">FileInfo of gzip concatenated file</param>
         /// <param name="decompressedFileName">Name of the decompressed file</param>
@@ -82,7 +83,7 @@ namespace GZipTest.Tools.Compressors
         public int DecompressConcatenatedStreams(FileInfo filePath, string decompressedFileName, bool deleteOriginal = false)
         {
             List<int> startIndexes = new List<int>();
-            byte[] startOfFilePattern = new byte[] { 0x1F, 0x8B, 0x08, 0x00, 0x00, 0x00 };
+            byte[] startOfFilePattern = new byte[] { 0x1F, 0x8B, 0x08, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00 };
 
             //Get the bytes of the file
             byte[] fileBytes = File.ReadAllBytes(filePath.Name);
@@ -97,7 +98,9 @@ namespace GZipTest.Tools.Compressors
                 bool match = true;
                 for (int j = 0; j < startOfFilePattern.Length; j++)
                 {
-                    if (fileBytes[i + j] != startOfFilePattern[j])
+                    //4th bit can have all the values between 0 to 4 (5-7 reserved) depending on the input file
+                    //so we cannot check it against the pattern
+                    if (j != 4 && fileBytes[i + j] != startOfFilePattern[j])
                     {
                         match = false;
                         break;
@@ -121,30 +124,88 @@ namespace GZipTest.Tools.Compressors
 
             for (int i = 0; i < startIndexes.Count; i++)
             {
-                int start = startIndexes.ElementAt(i);
+                //int start = ;
                 int length = 0;
 
                 if (i + 1 == startIndexes.Count)
                 {
-                    length = fileBytes.Length - start;
+                    length = fileBytes.Length - startIndexes[i];
                 }
                 else
                 {
-                    length = startIndexes.ElementAt(i + 1) - i;
+                    length = startIndexes[i + 1] - startIndexes[i];
                 }
 
                 if (length > 0)
                 {
-                    chunks.Add(fileBytes.Skip(start).Take(length).ToArray());
+                    chunks.Add(fileBytes.Skip(startIndexes[i]).Take(length).ToArray());
                 }
             }
 
+            return ConcatenateDecompressedChunks(chunks, decompressedFileName);
+        }
+
+        public class ConcBuffer
+        {
+
+        }
+
+        public int DecompressConcatenatedStreamsLowMemory(FileInfo filePath, string decompressedFileName,
+            bool deleteOriginal = false)
+        {
+            List<int> startIndexes = new List<int>();
+            byte[] startOfFilePattern = new byte[] { 0x1F, 0x8B, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00 };
+            //byte[] buffer = new byte[Const.CHUNK_SIZE_IN_MGBS * 1024 * 1024];
+            ConcurrentBuffer concBuffer = new ConcurrentBuffer(Const.CHUNK_SIZE_IN_MGBS * 1024 * 1024);
+            using (FileStream inFileStream = File.OpenRead(filePath.Name))
+            {
+                int bytesRead = 0;
+                //wrap enough so that we do not loose filePattern
+                while ((bytesRead = inFileStream.Read(concBuffer.Buffer, 0, concBuffer.MaxCount - startOfFilePattern.Length)) 
+                        != 0)
+                {
+                    int traversableLength = concBuffer.MaxCount - startOfFilePattern.Length;
+                    for (int i = 0; i <= traversableLength; i++)
+                    {
+                        bool match = true;
+                        for (int j = 0; j < startOfFilePattern.Length; j++)
+                        {
+                            if (concBuffer.Buffer[i + j] != startOfFilePattern[j])
+                            {
+                                match = false;
+                                break;
+                            }
+                        }
+
+                        if (match == true)
+                        {
+                            startIndexes.Add(i);
+                            i += startOfFilePattern.Length;
+                        }
+                    }
+                }
+            }
+
+            if (deleteOriginal)
+            {
+                filePath.Delete();
+            }
+
+            return 1;
+        }
+
+        #endregion public methods endregion
+
+        #region private methods
+
+        private int ConcatenateDecompressedChunks(List<byte[]> chunks, string decompressedFileName)
+        {
             byte[] buffer = new byte[Const.BUFFER_SIZE];
             using (FileStream outFileStream = File.Create(decompressedFileName))
             {
-                foreach (byte[] Chunk in chunks)
+                foreach (byte[] chunk in chunks)
                 {
-                    using (MemoryStream mStream = new MemoryStream(Chunk))
+                    using (MemoryStream mStream = new MemoryStream(chunk))
                     {
                         using (GZipStream gzStream = new GZipStream(mStream, CompressionMode.Decompress))
                         {
@@ -157,8 +218,10 @@ namespace GZipTest.Tools.Compressors
                     }
                 }
 
-                return 1;
+                return 0;
             }
         }
+
+        #endregion private methods endregion
     }
 }

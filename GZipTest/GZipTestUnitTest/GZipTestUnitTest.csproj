@@ -4,7 +4,7 @@
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
-    <ProjectGuid>{60F29EAB-F588-4C54-A9BE-9689BF823500}</ProjectGuid>
+    <ProjectGuid>{CA6340C6-51CE-45B4-B05F-54F0AB685A73}</ProjectGuid>
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
     <RootNamespace>GZipTestUnitTest</RootNamespace>
@@ -53,21 +53,19 @@
         <Reference Include="Microsoft.VisualStudio.QualityTools.UnitTestFramework, Version=10.1.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL" />
       </ItemGroup>
     </When>
-    <Otherwise />
+    <Otherwise>
+      <ItemGroup>
+        <Reference Include="Microsoft.VisualStudio.QualityTools.UnitTestFramework" />
+      </ItemGroup>
+    </Otherwise>
   </Choose>
   <ItemGroup>
     <Compile Include="Common\CommonTests.cs" />
     <Compile Include="IntegrationTests\CompressorIntegrationTests.cs" />
     <Compile Include="PerformanceTests\PerformanceTests.cs" />
-    <Compile Include="UnitTests\CompressorUnitTests.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="UnitTests\CompressorUnitTests.cs" />
     <Compile Include="UnitTests\FileSplitterUnitTests.cs" />
-  </ItemGroup>
-  <ItemGroup>
-    <ProjectReference Include="..\GZipTest\GZipTest.csproj">
-      <Project>{57ee41f3-1a6e-4f1b-bbe0-5b1415869f04}</Project>
-      <Name>GZipTest</Name>
-    </ProjectReference>
   </ItemGroup>
   <ItemGroup>
     <Content Include="TestResources\XMLTestFile.xml">
@@ -76,6 +74,12 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\GZipTest\GZipTest.csproj">
+      <Project>{57ee41f3-1a6e-4f1b-bbe0-5b1415869f04}</Project>
+      <Name>GZipTest</Name>
+    </ProjectReference>
   </ItemGroup>
   <Choose>
     <When Condition="'$(VisualStudioVersion)' == '10.0' And '$(IsCodedUITest)' == 'True'">

@@ -12,7 +12,7 @@ namespace GZipTestUnitTest.UnitTests
     [TestFixture]
     public class CompressorUnitTests
     {
-        private readonly string xmlFile = "XMLTestFile.xml";
+        private readonly string smallXmlFile = "XMLTestFile.xml";
         private readonly string bigXmlFile = "standard.xml";
         private readonly string compressedFileName = "XMLCompressed";
         private readonly string decompressedFilename = "XMLDecompressed";
@@ -27,7 +27,6 @@ namespace GZipTestUnitTest.UnitTests
         public void CompressTest()
         {
             //Arrange
-            Stopwatch sw = new Stopwatch();
             ICompressor compressor = new Compressor();
             FileInfo fileInfo = new FileInfo(bigXmlFile);
 
@@ -46,7 +45,24 @@ namespace GZipTestUnitTest.UnitTests
             FileInfo fileInfo = new FileInfo(bigXmlFile);
 
             //Act
-            compressor.CompressOnMultipleThreads(fileInfo, compressedFileName);
+            int result = compressor.CompressOnMultipleThreads(fileInfo, compressedFileName);
+
+            //Assert
+            Assert.AreEqual(result, 0);
+        }
+
+        [Test]
+        public void CompressorThreadPoolTest()
+        {
+            //Arrange
+            FileInfo fileInfo = new FileInfo(bigXmlFile);
+            ThreadPoolCompression ctp = new ThreadPoolCompression();
+
+            //Act
+            int result = ctp.ThreadPoolCompress(fileInfo, compressedFileName);
+
+            //Assert
+            Assert.AreEqual(result, 0);
         }
 
         [Test]
@@ -60,20 +76,23 @@ namespace GZipTestUnitTest.UnitTests
             int result = decompressor.Decompress(fileInfo, decompressedFilename);
 
             //Assert
-            Assert.Equals(result, 0);
+            Assert.AreEqual(result, 0);
         }
 
         [Test]
-        public void CompressorThreadPoolTest()
+        public void DecompressConcatenatedStreamsTest()
         {
             //Arrange
-            ICompressor decompressor = new Compressor();
-            var path = Directory.GetCurrentDirectory();
-            FileInfo fileInfo = new FileInfo(bigXmlFile);
-            ThreadPoolCompression ctp = new ThreadPoolCompression();
-
+            ICompressorMultithread compressor = new CompressorMultiThread();
+            var fileInfo = File.Exists(compressedFileName) ? 
+                new FileInfo(compressedFileName) : 
+                new FileInfo(compressedFileName + ".gz");
+             
             //Act
-            ctp.ThreadPoolCompress(fileInfo, compressedFileName);
+            int result = compressor.DecompressConcatenatedStreams(fileInfo, decompressedFilename);
+
+            //Assert
+            Assert.AreEqual(result, 0);
         }
     }
 }
