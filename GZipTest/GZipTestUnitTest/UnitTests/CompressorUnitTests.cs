@@ -42,7 +42,7 @@ namespace GZipTestUnitTest.UnitTests
         {
             //Arrange
             FileInfo fileInfo = new FileInfo(bigXmlFile);
-            ThreadPoolCompression ctp = new ThreadPoolCompression();
+            ThreadPoolCompressor ctp = new ThreadPoolCompressor();
 
             //Act
             int result = ctp.ThreadPoolCompress(fileInfo, compressedFileName);
@@ -66,20 +66,34 @@ namespace GZipTestUnitTest.UnitTests
         }
 
         [Test]
-        public void DecompressConcatenatedStreamsTest()
+        public void DecompressConcatenatedStreamsTestLowMemory()
         {
             //Arrange
-            //ICompressorMultithread compressor = new CompressorMultiThread();
-            CompressorMultiThread compressor = new CompressorMultiThread();
+            //ICompressorMultiThread compressor = new CompressorMultiThread();
+            ICompressorMultiThread compressor = new CompressorMultiThreadLowMemory();
             var fileInfo = File.Exists(compressedFileName) ? 
                 new FileInfo(compressedFileName) : 
                 new FileInfo(compressedFileName + ".gz");
 
             //Act
-            int result2 = compressor.DecompressConcatenatedStreamsLowMemoryUsage(fileInfo, decompressedFilename);
-            int result = compressor.DecompressConcatenatedStreamsHighMemoryUsage(fileInfo, decompressedFilename);
+            int result = compressor.DecompressConcatenatedStreams(fileInfo, decompressedFilename);
 
-            
+            //Assert
+            Assert.AreEqual(result, 0);
+        }
+
+        [Test]
+        public void DecompressConcatenatedStreamsTestHighMemory()
+        {
+            //Arrange
+            //ICompressorMultiThread compressor = new CompressorMultiThread();
+            ICompressorMultiThread compressor = new CompressorMultiThreadHighMemory();
+            var fileInfo = File.Exists(compressedFileName) ?
+                new FileInfo(compressedFileName) :
+                new FileInfo(compressedFileName + ".gz");
+
+            //Act
+            int result = compressor.DecompressConcatenatedStreams(fileInfo, decompressedFilename);
 
             //Assert
             Assert.AreEqual(result, 0);

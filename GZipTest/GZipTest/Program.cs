@@ -2,6 +2,7 @@
 using System.IO;
 using GZipTest.Tools;
 using GZipTest.Enums;
+using GZipTest.Globals;
 using GZipTest.Interfaces;
 using GZipTest.Tools.Compressors;
 
@@ -32,12 +33,15 @@ namespace GZipTest
                 switch (compressOperation)
                 {
                     case CompressOperations.Compress:
-                        ThreadPoolCompression ctp = new ThreadPoolCompression();
+                        IThreadPoolCompressor ctp = new ThreadPoolCompressor();
                         return ctp.ThreadPoolCompress(fileInfo, outputFilePath);
 
                     case CompressOperations.Decompress:
-                        ICompressorMultithread compressor = new CompressorMultiThread();
-                        return compressor.DecompressConcatenatedStreamsHighMemoryUsage(fileInfo, outputFilePath);
+                        long size = fileInfo.Length;
+                        ICompressorMultiThread compressor = size > Const.MEMORY_THRESHOLD ? 
+                            (ICompressorMultiThread) new CompressorMultiThreadLowMemory() :
+                            (ICompressorMultiThread) new CompressorMultiThreadHighMemory();
+                        return compressor.DecompressConcatenatedStreams(fileInfo, outputFilePath);
 
                     default:
                         return 1;

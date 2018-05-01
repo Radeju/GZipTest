@@ -6,9 +6,10 @@ using System.Text;
 
 namespace GZipTest.Interfaces
 {
-    public interface ICompressorMultithread : ICompressor
+    public interface ICompressorMultiThread : ICompressor
     {
         void ThreadPoolCallback(object threadContext);
-        int DecompressConcatenatedStreamsHighMemoryUsage(FileInfo file, string decompressedFileName, bool deleteOriginal = false);
+        int DecompressConcatenatedStreams(FileInfo file, string decompressedFileName, bool deleteOriginal = false);
+        int Status();
     }
 }
