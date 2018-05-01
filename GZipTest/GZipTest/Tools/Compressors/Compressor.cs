@@ -10,6 +10,9 @@ using GZipTest.Globals;
 
 namespace GZipTest.Tools.Compressors
 {
+    /// <summary>
+    /// Basic Compress / Decompress class. No multithreading
+    /// </summary>
     public class Compressor : ICompressor
     {
         public int Compress(FileInfo fileToCompress, string archiveName, bool deleteOriginal = false)

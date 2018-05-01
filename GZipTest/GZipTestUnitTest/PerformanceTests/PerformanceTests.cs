@@ -10,24 +10,42 @@ namespace GZipTestUnitTest.PerformanceTests
     [TestFixture]
     public class PerformanceTests
     {
+        private CompressorUnitTests _compressor;
+
         [OneTimeSetUp]
         public void CompressorUnitTestsInit()
         {
             Common.Common.SetDirectory();
         }
 
+        [SetUp]
+        public void CompressorUnitTestsSetUp()
+        {
+            _compressor = new CompressorUnitTests();
+        }
+
         [Test]
         public void MeasureCompressorTests()
         {
-            CompressorUnitTests compressor = new CompressorUnitTests();
-            TimeSpan time = MeasureTime(compressor.CompressTest);
+            TimeSpan time = MeasureTime(_compressor.CompressTest);
         }
 
         [Test]
         public void MeasureCompressorThreadPoolTests()
         {
-            CompressorUnitTests compressor = new CompressorUnitTests();
-            TimeSpan time = MeasureTime(compressor.CompressorThreadPoolTest);
+            TimeSpan time = MeasureTime(_compressor.CompressorThreadPoolTest);
+        }
+
+        [Test]
+        public void MeasureDecompressingHighMemory()
+        {
+            TimeSpan time = MeasureTime(_compressor.DecompressConcatenatedStreamsTestHighMemory);
+        }
+
+        [Test]
+        public void MeasureDocmpressingLowMemory()
+        {
+            TimeSpan time = MeasureTime(_compressor.DecompressConcatenatedStreamsTestLowMemory);
         }
 
         private TimeSpan MeasureTime(Action a)

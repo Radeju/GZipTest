@@ -1,24 +1,31 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.IO;
 using System.IO.Compression;
 using System.Linq;
-using System.Text;
-using System.Threading;
 using GZipTest.Globals;
+using GZipTest.Interfaces;
 
 namespace GZipTest.Tools.Compressors
 {
-    public class CompressorMultiThreadHighMemory : CompressorMultiThread
+    /// <summary>
+    /// 
+    /// </summary>
+    public class CompressorMultiThreadHighMemory : CompressorMultiThread, IDecompressConcatenatedStreams
     {
-        public CompressorMultiThreadHighMemory
-            (ManualResetEvent doneEvent, FileInfo fileToCompress, string archiveName, bool deleteOriginal = false) :
-            base(doneEvent, fileToCompress, archiveName, deleteOriginal)
-        {
+        #region public methods
 
-        }
-
-        public override int DecompressConcatenatedStreams(FileInfo filePath, string decompressedFileName, bool deleteOriginal = false)
+        /// <summary>
+        /// Provides a workaround to decompressing gzip files that are concatenated
+        /// I used http://www.zlib.org/rfc-gzip.html for header specification of GZip.
+        /// Credit also goes to https://bamcisnetworks.wordpress.com/2017/05/22/decompressing-concatenated-gzip-files-in-c-received-from-aws-cloudwatch-logs/
+        /// for describing the issue of decompressing concatenated zipped files. This approach is heavy on memory and should not be used
+        /// on big files.
+        /// </summary>
+        /// <param name="filePath">FileInfo of gzip concatenated file</param>
+        /// <param name="decompressedFileName">Name of the decompressed file</param>
+        /// <param name="deleteOriginal">Bool flag whether to remove the original file</param>
+        /// <returns>The decompressed byte content of the gzip file</returns>
+        public int DecompressConcatenatedStreams(FileInfo filePath, string decompressedFileName, bool deleteOriginal = false)
         {
             List<long> startIndexes = new List<long>();
 
@@ -40,6 +47,10 @@ namespace GZipTest.Tools.Compressors
             }
             return ConcatenateDecompressedChunks(chunks, decompressedFileName);
         }
+
+        #endregion public methods endregion
+
+        #region private methods
 
         private List<byte[]> CreateChunksFromFile(List<long> startIndexes, byte[] fileBytes)
         {
@@ -89,5 +100,7 @@ namespace GZipTest.Tools.Compressors
                 return 0;
             }
         }
+
+        #endregion private methods endregion
     }
 }

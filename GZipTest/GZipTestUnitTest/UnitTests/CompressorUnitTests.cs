@@ -42,7 +42,7 @@ namespace GZipTestUnitTest.UnitTests
         {
             //Arrange
             FileInfo fileInfo = new FileInfo(bigXmlFile);
-            ThreadPoolCompressor ctp = new ThreadPoolCompressor();
+            IThreadPoolCompressor ctp = new ThreadPoolCompressor();
 
             //Act
             int result = ctp.ThreadPoolCompress(fileInfo, compressedFileName);
@@ -69,8 +69,7 @@ namespace GZipTestUnitTest.UnitTests
         public void DecompressConcatenatedStreamsTestLowMemory()
         {
             //Arrange
-            //ICompressorMultiThread compressor = new CompressorMultiThread();
-            ICompressorMultiThread compressor = new CompressorMultiThreadLowMemory();
+            IDecompressConcatenatedStreams compressor = new CompressorMultiThreadLowMemory();
             var fileInfo = File.Exists(compressedFileName) ? 
                 new FileInfo(compressedFileName) : 
                 new FileInfo(compressedFileName + ".gz");
@@ -86,8 +85,7 @@ namespace GZipTestUnitTest.UnitTests
         public void DecompressConcatenatedStreamsTestHighMemory()
         {
             //Arrange
-            //ICompressorMultiThread compressor = new CompressorMultiThread();
-            ICompressorMultiThread compressor = new CompressorMultiThreadHighMemory();
+            IDecompressConcatenatedStreams compressor = new CompressorMultiThreadHighMemory();
             var fileInfo = File.Exists(compressedFileName) ?
                 new FileInfo(compressedFileName) :
                 new FileInfo(compressedFileName + ".gz");

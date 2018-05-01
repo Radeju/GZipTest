@@ -6,19 +6,24 @@ using System.Linq;
 using System.Text;
 using System.Threading;
 using GZipTest.Globals;
+using GZipTest.Interfaces;
 
 namespace GZipTest.Tools.Compressors
 {
-    public class CompressorMultiThreadLowMemory : CompressorMultiThread
+    public class CompressorMultiThreadLowMemory : CompressorMultiThread, IDecompressConcatenatedStreams
     {
-        public CompressorMultiThreadLowMemory
-            (ManualResetEvent doneEvent, FileInfo fileToCompress, string archiveName, bool deleteOriginal = false) :
-            base(doneEvent, fileToCompress, archiveName, deleteOriginal)
-        {
+        #region public methods
 
-        }
-
-        public override int DecompressConcatenatedStreams(FileInfo filePath, string decompressedFileName,
+        /// <summary>
+        /// Provides a workaround to decompressing gzip files that are concatenated
+        /// I used http://www.zlib.org/rfc-gzip.html for header specification of GZip.
+        ///  This class is using streams to reduce load on memory (differently to CompressorMultiThreadHighMemory)
+        /// </summary>
+        /// <param name="filePath">FileInfo of gzip concatenated file</param>
+        /// <param name="decompressedFileName">Name of the decompressed file</param>
+        /// <param name="deleteOriginal">Bool flag whether to remove the original file</param>
+        /// <returns>The decompressed byte content of the gzip file</returns>
+        public int DecompressConcatenatedStreams(FileInfo filePath, string decompressedFileName,
             bool deleteOriginal = false)
         {
             List<long> startIndexes = new List<long>();
@@ -61,6 +66,10 @@ namespace GZipTest.Tools.Compressors
             return result;
         }
 
+        #endregion public methods endregion
+
+        #region private methods
+
         private int ConcatenateDecompressedChunksLowMemory(List<long> startIndexes, FileInfo file, string decompressedFileName)
         {
             byte[] buffer = new byte[Const.BUFFER_SIZE];
@@ -97,5 +106,7 @@ namespace GZipTest.Tools.Compressors
             inFileStream.Read(chunk, 0, chunk.Length);
             return chunk;
         }
+
+        #endregion private methods endregion
     }
 }

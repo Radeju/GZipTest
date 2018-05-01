@@ -13,7 +13,7 @@ namespace GZipTest.Tools
             int i = 1;
             while (File.Exists(resultFilePath))
             {
-                resultFilePath = filePath + "_" + i; //should be no need for Stringbuilder
+                resultFilePath = filePath + "_" + i;
                 i += 1;
             }
             return resultFilePath;

@@ -10,7 +10,7 @@ namespace GZipTestUnitTest.IntegrationTests
     [TestFixture]
     class CompressorIntegrationTests
     {
-        private readonly string xmlFile = "XMLTestFile.xml";
+        private readonly string smallXmlFile = "XMLTestFile.xml";
         private readonly string bigXmlFile = "standard.xml";
         private readonly string compressedFileName = "XMLCompressed";
         private readonly string decompressedFilename = "XMLDecompressed";

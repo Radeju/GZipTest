@@ -14,9 +14,6 @@ namespace GZipTest
         {
             try
             {
-                args = new[] {"compress", "standard.xml", "standard-comp.gz"};
-                //args = new[] { "decompress", "standard-comp.gz", "standard-restored" };
-
                 Validator val = new Validator();
                 CompressOperations compressOperation;
                 string inputFilePath;
@@ -37,10 +34,8 @@ namespace GZipTest
                         return ctp.ThreadPoolCompress(fileInfo, outputFilePath);
 
                     case CompressOperations.Decompress:
-                        long size = fileInfo.Length;
-                        ICompressorMultiThread compressor = size > Const.MEMORY_THRESHOLD ? 
-                            (ICompressorMultiThread) new CompressorMultiThreadLowMemory() :
-                            (ICompressorMultiThread) new CompressorMultiThreadHighMemory();
+                        //Harded coded for LowMemory usage right now as performance tests were better even for sub<50 mb files
+                        IDecompressConcatenatedStreams compressor = new CompressorMultiThreadLowMemory();
                         return compressor.DecompressConcatenatedStreams(fileInfo, outputFilePath);
 
                     default:
@@ -49,7 +44,7 @@ namespace GZipTest
             }
             catch (Exception e)
             {
-                Console.WriteLine($"Program threw following exception {e.Message}. Shutting down");
+                Console.WriteLine($"Program threw following exception {e.Message}. Shutting down.");
                 return 1;
             }
         }

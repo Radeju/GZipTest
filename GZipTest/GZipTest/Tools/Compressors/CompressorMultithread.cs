@@ -10,7 +10,10 @@ using GZipTest.Interfaces;
 
 namespace GZipTest.Tools.Compressors
 {
-    public abstract class CompressorMultiThread : Compressor, ICompressorMultiThread
+    /// <summary>
+    /// Compressor that is able to compress files using multithreading
+    /// </summary>
+    public class CompressorMultiThread : Compressor, ICompressorMultiThread
     {
         private readonly ManualResetEvent _doneEvent;
         private readonly FileInfo _fileToCompress;
@@ -19,8 +22,18 @@ namespace GZipTest.Tools.Compressors
         private int _status = 1;
 
         protected readonly byte[] _startOfFilePattern = new byte[] { 0x1F, 0x8B, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00 };
-        
+
         #region public methods
+
+        public CompressorMultiThread() { }
+
+        public CompressorMultiThread(ManualResetEvent doneEvent, FileInfo fileToCompress, string archiveName, bool deleteOriginal = false)
+        {
+            _doneEvent = doneEvent;
+            _fileToCompress = fileToCompress;
+            _archiveName = archiveName;
+            _deleteOriginal = deleteOriginal;
+        }
 
         public void ThreadPoolCallback(object threadContext)
         {
@@ -34,32 +47,11 @@ namespace GZipTest.Tools.Compressors
             return _status;
         }
 
-        /// <summary>
-        /// Provides a workaround to decompressing gzip files that are concatenated
-        /// I used http://www.zlib.org/rfc-gzip.html for header specification of GZip.
-        /// Credit also goes to https://bamcisnetworks.wordpress.com/2017/05/22/decompressing-concatenated-gzip-files-in-c-received-from-aws-cloudwatch-logs/
-        /// for describing the issue of decompressing concatenated zipped files.
-        /// </summary>
-        /// <param name="filePath">FileInfo of gzip concatenated file</param>
-        /// <param name="decompressedFileName">Name of the decompressed file</param>
-        /// <param name="deleteOriginal">Bool flag whether to remove the original file</param>
-        /// <returns>The decompressed byte content of the gzip file</returns>
-        public abstract int DecompressConcatenatedStreams(FileInfo filePath, string decompressedFileName,
-            bool deleteOriginal = false);
-
         #endregion public methods endregion
 
         #region protected methods
 
-        protected CompressorMultiThread() { }
 
-        protected CompressorMultiThread(ManualResetEvent doneEvent, FileInfo fileToCompress, string archiveName, bool deleteOriginal = false)
-        {
-            _doneEvent = doneEvent;
-            _fileToCompress = fileToCompress;
-            _archiveName = archiveName;
-            _deleteOriginal = deleteOriginal;
-        }
 
         protected void FindMatches(List<long> startIndexes, byte[] startOfFilePattern,
             byte[] buffer, int traversableLength, int bufferReadCount = 0, int byteCount = 0)

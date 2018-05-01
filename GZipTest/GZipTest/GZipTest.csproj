@@ -46,6 +46,7 @@
     <Compile Include="Globals\Const.cs" />
     <Compile Include="Interfaces\ICompressorMultiThread.cs" />
     <Compile Include="Interfaces\ICompressor.cs" />
+    <Compile Include="Interfaces\IDecompressConcatenatedStreams.cs" />
     <Compile Include="Interfaces\IThreadPoolCompressor.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

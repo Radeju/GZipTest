@@ -5,6 +5,9 @@ using System.Text;
 
 namespace GZipTest.Tools
 {
+    /// <summary>
+    /// Very trivial concurrent buffer implementation.
+    /// </summary>
     public class ConcurrentBuffer
     {
         private byte[] _buffer;
